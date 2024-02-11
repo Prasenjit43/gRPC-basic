@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	proto "grpc/protoc"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,29 +29,30 @@ func main() {
 
 func clientConnect(c *gin.Context) {
 
-	req := []*proto.HelloRequest{
-		{Something: "one"},
-		{Something: "two"},
-		{Something: "three"},
-		{Something: "four"},
-		{Something: "five"},
+	stream, err := client.ServerReply(context.TODO(), &proto.HelloRequest{
+		Something: "Hiiiii",
+	})
+
+	if err != nil {
+		return
 	}
 
-	stream, err := client.ServerReply(context.TODO())
+	count := 0
 
-	for _, x := range req {
-		err := stream.Send(x)
+	for {
+		response, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
 			return
 		}
+		fmt.Println("Response Message :", response)
+		count++
+
 	}
 
-	response, err := stream.CloseAndRecv()
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": response,
+		"message": count,
 	})
 }
