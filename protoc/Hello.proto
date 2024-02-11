@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "./";
+
+message HelloRequest{
+    string Something = 1;
+}
+
+message HelloRespone {
+    string Reply = 1;
+}
+
+service Example{
+    rpc ServerReply (HelloRequest) returns (HelloRespone);
+}
+
+
+//protoc --go-grpc_out=. --go_out=. *.proto
