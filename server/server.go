@@ -1,11 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	proto "grpc/protoc"
+	"io"
 	"net"
-
+	"strconv"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -32,8 +32,22 @@ func main() {
 
 }
 
-func (s *server) ServerReply(ctx context.Context, req *proto.HelloRequest) (*proto.HelloRespone, error) {
+func (s *server) ServerReply(stream proto.Example_ServerReplyServer) error {
 	fmt.Println("Inside the ServerReply Function")
-	fmt.Println("Req Data :", req.Something)
-	return &proto.HelloRespone{}, nil
+	total := 0
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(&proto.HelloRespone{
+				Reply: strconv.Itoa(total),
+			})
+		}
+
+		if err != nil {
+			return err
+		}
+		total++
+		fmt.Println(req)
+	}
 }
